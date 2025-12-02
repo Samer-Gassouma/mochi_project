@@ -1,0 +1,252 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+.vscode/
+.idea/
+
+# PlatformIO build artifacts
+build/
+*.elf
+*.bin
+*.hex
+*.map
+
+# Python virtual environment (PlatformIO uses Python)
+venv/
+env/
+ENV/
+.venv/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# ============================================
+# React Native / Expo
+# ============================================
+
+# Node modules
+node_modules/
+mochi-app/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Keep package-lock.json for dependency locking
+# package-lock.json
+yarn.lock
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Expo iOS
+mochi-app/ios/Pods/
+mochi-app/ios/build/
+mochi-app/ios/*.xcworkspace
+mochi-app/ios/*.xcuserdata
+mochi-app/ios/.xcode.env.local
+mochi-app/ios/DerivedData/
+
+# Expo Android
+mochi-app/android/app/build/
+mochi-app/android/build/
+mochi-app/android/.gradle/
+mochi-app/android/local.properties
+mochi-app/android/app/debug.keystore
+mochi-app/android/app/release.keystore
+mochi-app/android/.idea/
+mochi-app/android/*.iml
+mochi-app/android/captures/
+mochi-app/android/.externalNativeBuild/
+mochi-app/android/app/.cxx/
+# Keep gradle wrapper files (gradlew, gradlew.bat, gradle/wrapper/) - these are needed
+
+# Metro
+.metro-health-check*
+
+# ============================================
+# IDE and Editor files
+# ============================================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.project
+.classpath
+.cproject
+.settings/
+
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# OS Files
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Logs and temporary files
+# ============================================
+
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+*.swp
+*.swo
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Environment and secrets
+# ============================================
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+secrets/
+credentials/
+
+# ============================================
+# Build and distribution
+# ============================================
+
+# APK files (Android)
+*.apk
+*.aab
+
+# IPA files (iOS)
+*.ipa
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# ============================================
+# Testing
+# ============================================
+
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# ============================================
+# Misc
+# ============================================
+
+*.orig
+*.rej
+*~
+.#*
+
