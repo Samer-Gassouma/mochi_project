@@ -76,7 +76,11 @@ npx expo run:android  # or run:ios
 - [PlatformIO](https://platformio.org/) installed
 - ESP32-C3 board connected via USB
 
-### Build and Upload
+### Quick Start
+
+**For Mac users**, see the detailed [MAC_SETUP_GUIDE.md](MAC_SETUP_GUIDE.md) for step-by-step instructions.
+
+**For Linux/Windows users:**
 
 ```bash
 # Build the project
