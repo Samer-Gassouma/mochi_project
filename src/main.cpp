@@ -23,7 +23,7 @@
 #include "weather_api.h"
 #include "prayer_api.h"
 #include "display_brightness.h"
-#include "bluetooth_setup.h"
+#include "ble_setup.h"
 
 // Display setup
 #define SCREEN_WIDTH 128
@@ -52,7 +52,7 @@ EmotionManager emotionManager(&roboEyes);
 WeatherAPI weatherAPI(&preferences);
 PrayerAPI prayerAPI(&preferences);
 DisplayBrightness displayBrightness(&display);
-BluetoothSetup bluetoothSetup(&preferences);
+BleSetup bleSetup(&preferences);
 
 // State management
 bool wifiConnected = false;
@@ -65,7 +65,7 @@ bool isConfigured = false;
 String savedSSID = "";
 String savedPassword = "";
 
-// Bluetooth setup data
+// BLE setup data
 SetupData setupData;
 
 // API data
@@ -120,16 +120,18 @@ void setup() {
   ledcWriteTone(BUZZER_CHANNEL, 0); // ensure silent
   Serial.println("Buzzer: OK");
   
-  // Initialize Bluetooth for setup
-  Serial.println("Initializing Bluetooth...");
-  if (bluetoothSetup.begin()) {
-    Serial.println("✅ Bluetooth ready for setup");
+  // Initialize BLE for setup
+  Serial.println("Initializing BLE setup...");
+  if (bleSetup.begin()) {
+    Serial.println("✅ BLE advertising: Mochi-Robot-Setup");
+    screenManager.setBluetoothEnabled(true);
   } else {
-    Serial.println("⚠️ Bluetooth failed, continuing without setup mode");
+    Serial.println("⚠️ BLE init failed, continuing without setup mode");
+    screenManager.setBluetoothEnabled(false);
   }
   
   // Load setup data from NVS
-  if (bluetoothSetup.getSetupData(&setupData)) {
+  if (bleSetup.getSetupData(&setupData)) {
     if (setupData.wifiSSID.length() > 0) {
       savedSSID = setupData.wifiSSID;
       savedPassword = setupData.wifiPassword;
@@ -237,17 +239,12 @@ void loop() {
   // Update display brightness (for dimming animation)
   displayBrightness.update();
   
-  // Update Bluetooth setup handler
-  bluetoothSetup.update();
-  
-  // Check for new setup data from Bluetooth and reconnect WiFi if needed
+  // Check for new setup data from BLE and reconnect WiFi if needed
   static unsigned long lastBTCheck = 0;
-  static bool lastBTConnected = false;
-  if (bluetoothSetup.getIsConnected() && (now - lastBTCheck > 2000)) {
-    // Check if new WiFi credentials were saved
-    if (bluetoothSetup.getSetupData(&setupData)) {
+  if (bleSetup.getIsEnabled() && (now - lastBTCheck > 2000)) {
+    if (bleSetup.getSetupData(&setupData)) {
       if (setupData.wifiSSID.length() > 0 && setupData.wifiSSID != savedSSID) {
-        Serial.println("📡 New WiFi credentials received, reconnecting...");
+        Serial.println("📡 New WiFi credentials received via BLE, reconnecting...");
         savedSSID = setupData.wifiSSID;
         savedPassword = setupData.wifiPassword;
         isConfigured = true;
@@ -265,7 +262,6 @@ void loop() {
     }
     lastBTCheck = now;
   }
-  lastBTConnected = bluetoothSetup.getIsConnected();
   
   // Update RoboEyes (only on robot eyes screen and when awake)
   if (screenManager.getCurrentScreen() == SCREEN_ROBOT_EYES && !isSleeping) {
@@ -372,10 +368,10 @@ void loop() {
     screenManager.setWiFiInfo(WiFi.SSID(), WiFi.localIP().toString(), WiFi.RSSI());
   }
   
-  // Update Bluetooth status in settings
+  // Update Bluetooth status in settings (BLE)
   static unsigned long lastBTStatusUpdate = 0;
   if (now - lastBTStatusUpdate > 5000) {
-    screenManager.setBluetoothEnabled(bluetoothSetup.getIsEnabled());
+    screenManager.setBluetoothEnabled(bleSetup.getIsEnabled());
     lastBTStatusUpdate = now;
   }
 }
