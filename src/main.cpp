@@ -7,7 +7,6 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "driver/i2s.h"
 #include <WiFi.h>
 #include <Preferences.h>
 #include <ESPmDNS.h>
@@ -36,11 +35,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Touch sensor
 #define TOUCH_PIN 2
 
-// I2S Audio pins
-#define I2S_BCLK 4
-#define I2S_LRC  5
-#define I2S_DIN  6
-#define I2S_SD   7
+// Buzzer (passive or active piezo) on GPIO 4
+#define BUZZER_PIN 4
+#define BUZZER_CHANNEL 0
 
 // RoboEyes instance
 RoboEyes<Adafruit_SSD1306> roboEyes(display);
@@ -116,46 +113,12 @@ void setup() {
   Serial.println("Initializing Touch Sensor...");
   Serial.println("Touch: OK");
   
-  // Initialize Audio
-  Serial.println("Initializing Audio...");
-  i2s_config_t i2s_config = {
-    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-    .sample_rate = 44100,
-    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-    .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_STAND_MSB),
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 8,
-    .dma_buf_len = 1024,
-    .use_apll = false,
-    .tx_desc_auto_clear = true,
-    .fixed_mclk = 0
-  };
-  
-  i2s_pin_config_t pin_config = {
-    .bck_io_num = I2S_BCLK,
-    .ws_io_num = I2S_LRC,
-    .data_out_num = I2S_DIN,
-    .data_in_num = I2S_PIN_NO_CHANGE
-  };
-  
-  esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-  if (err != ESP_OK) {
-    Serial.print("I2S driver install failed: ");
-    Serial.println(err);
-  } else {
-    err = i2s_set_pin(I2S_NUM_0, &pin_config);
-    if (err != ESP_OK) {
-      Serial.print("I2S pin config failed: ");
-      Serial.println(err);
-    }
-    
-    pinMode(I2S_SD, OUTPUT);
-    digitalWrite(I2S_SD, HIGH);
-    delay(10);
-    
-    Serial.println("Audio: OK");
-  }
+  // Initialize Buzzer (PWM via LEDC)
+  Serial.println("Initializing Buzzer...");
+  ledcSetup(BUZZER_CHANNEL, 2000, 10); // 2 kHz default, 10-bit resolution
+  ledcAttachPin(BUZZER_PIN, BUZZER_CHANNEL);
+  ledcWriteTone(BUZZER_CHANNEL, 0); // ensure silent
+  Serial.println("Buzzer: OK");
   
   // Initialize Bluetooth for setup
   Serial.println("Initializing Bluetooth...");
@@ -514,72 +477,27 @@ void updateSleepState() {
 }
 
 void generateTone(int frequency, int duration) {
-  int sampleRate = 44100;
-  int samples = (sampleRate * duration) / 1000;
-  int16_t *audioBuffer = (int16_t*)malloc(samples * sizeof(int16_t));
-  
-  if (audioBuffer == NULL) {
-    return;
-  }
-  
-  // Generate sine wave
-  for (int i = 0; i < samples; i++) {
-    float sample = sin(2.0 * PI * frequency * i / sampleRate);
-    audioBuffer[i] = (int16_t)(sample * 16383);
-  }
-  
-  // Write to I2S
-  size_t bytesWritten = 0;
-  i2s_write(I2S_NUM_0, audioBuffer, samples * sizeof(int16_t), &bytesWritten, portMAX_DELAY);
-  
-  free(audioBuffer);
+  // Simple square-wave tone using LEDC PWM
+  ledcWriteTone(BUZZER_CHANNEL, frequency);
+  delay(duration);
+  ledcWriteTone(BUZZER_CHANNEL, 0);
 }
 
 void purrSound() {
-  // Purr sound: oscillating frequency (like a cat purring)
-  // Base frequency around 25-30 Hz with modulation
-  int sampleRate = 44100;
-  int duration = 300; // 300ms purr
-  int samples = (sampleRate * duration) / 1000;
-  int16_t *audioBuffer = (int16_t*)malloc(samples * sizeof(int16_t));
+  // Purr: modulated low-frequency tone (human-hearable range ~150-220 Hz)
+  const int duration = 300; // ms
+  const int steps = 30;     // modulation steps
+  const int baseFreq = 180;
+  const int modDepth = 40;  // +/- range
+  const int modFreqMs = duration / steps;
   
-  if (audioBuffer == NULL) {
-    return;
+  for (int i = 0; i < steps; i++) {
+    float phase = (float)i / steps;
+    float freq = baseFreq + modDepth * sinf(2.0f * PI * phase);
+    ledcWriteTone(BUZZER_CHANNEL, (uint32_t)freq);
+    delay(modFreqMs);
   }
-  
-  float baseFreq = 28.0; // Base purr frequency (Hz)
-  float modFreq = 4.0;   // Modulation frequency (Hz) - creates the purr rhythm
-  float modDepth = 3.0;  // Frequency modulation depth
-  
-  for (int i = 0; i < samples; i++) {
-    float t = (float)i / sampleRate;
-    
-    // Create oscillating frequency (vibrating purr)
-    float freq = baseFreq + modDepth * sin(2.0 * PI * modFreq * t);
-    
-    // Generate the tone with amplitude envelope (fade in/out)
-    float envelope = 1.0;
-    if (i < samples / 10) {
-      envelope = (float)i / (samples / 10.0); // Fade in
-    } else if (i > samples * 9 / 10) {
-      envelope = (float)(samples - i) / (samples / 10.0); // Fade out
-    }
-    
-    float sample = sin(2.0 * PI * freq * t) * envelope;
-    
-    // Add some harmonics for richer sound (simplified)
-    sample += 0.3 * sin(2.0 * PI * freq * 2.0 * t) * envelope;
-    sample += 0.15 * sin(2.0 * PI * freq * 3.0 * t) * envelope;
-    
-    // Normalize and convert to int16
-    audioBuffer[i] = (int16_t)(sample * 12000); // Slightly quieter than regular tones
-  }
-  
-  // Write to I2S
-  size_t bytesWritten = 0;
-  i2s_write(I2S_NUM_0, audioBuffer, samples * sizeof(int16_t), &bytesWritten, portMAX_DELAY);
-  
-  free(audioBuffer);
+  ledcWriteTone(BUZZER_CHANNEL, 0);
 }
 
 void initWiFi() {

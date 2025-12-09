@@ -38,27 +38,16 @@
 
 ---
 
-### 3. MAX98357A I2S Audio Amplifier
+### 3. Buzzer (Passive or Active Piezo)
 
-| MAX98357A Pin | ESP32-C3 | Notes |
-|---------------|----------|-------|
-| Vin           | 5V       | Power supply (can use 3.3V but 5V recommended) |
-| GND           | GND      | Ground |
-| BCLK          | GPIO 4   | Bit Clock (I2S) |
-| LRC           | GPIO 5   | Left/Right Clock / Word Select (I2S) |
-| DIN           | GPIO 6   | Data Input (I2S) |
-| SD            | GPIO 7   | Shutdown pin (HIGH = enabled, LOW = disabled) |
+| Buzzer Pin | ESP32-C3 | Notes |
+|------------|----------|-------|
+| + (Positive) | GPIO 4 | Driven with PWM (LEDC) |
+| - (Negative) | GND    | Common ground |
 
-**Note:** SD pin is set HIGH in code to enable the amplifier.
-
----
-
-### 4. Speaker
-
-| Speaker Terminal | MAX98357A | Notes |
-|------------------|-----------|-------|
-| + (Positive)     | Speaker + | Audio output positive |
-| - (Negative)     | Speaker - | Audio output negative |
+**Notes:**
+- Use a 3.3V piezo buzzer. For louder 5V buzzers, drive through an NPN transistor + diode and power from 5V.
+- The MAX98357A I2S amplifier and speaker are no longer used; GPIOs 5, 6, 7 are now free.
 
 
 ```
@@ -66,16 +55,12 @@ ESP32-C3 Pin Layout:
 ┌─────────────────────────────────┐
 │                                     │
 │  GPIO 2  ←── TTP223 I/O            │
-│  GPIO 4  ←── MAX98357A BCLK        │
-│  GPIO 5  ←── MAX98357A LRC          │
-│  GPIO 6  ←── MAX98357A DIN          │
-│  GPIO 7  ←── MAX98357A SD           │
+│  GPIO 4  ←── Buzzer +              │
 │  GPIO 8  ←── SSD1306 SDA (I2C)      │
 │  GPIO 9  ←── SSD1306 SCL (I2C)      │
 │                                     │
 │  3.3V    ←── SSD1306 VCC            │
 │  3.3V    ←── TTP223 VCC             │
-│  5V      ←── MAX98357A Vin          │
 │  GND     ←── All GND connections    │
 │                                     │
 └─────────────────────────────────┘
@@ -95,17 +80,17 @@ ESP32-C3 Pin Layout:
         │                  │                  │
         │                  │                  │
     ┌───▼───┐         ┌───▼───┐         ┌───▼───┐
-    │SSD1306│         │TTP223 │         │MAX98357│
-    │OLED   │         │Touch  │         │Audio   │
-    │       │         │Sensor │         │Amp     │
-    └───────┘         └───────┘         └───┬───┘
+                    │SSD1306│         │TTP223 │         │ Buzzer │
+                    │OLED   │         │Touch  │         │ (Piezo)│
+                    │       │         │Sensor │         │        │
+                    └───────┘         └───────┘         └───┬───┘
                                              │
                                         ┌───▼───┐
-                                        │Speaker│
+                                        │ GND  │
                                         └───────┘
 
 Power Connections:
-- All VCC → 3.3V (except MAX98357A Vin → 5V)
+- All VCC → 3.3V
 - All GND → Common GND
 ```
 
