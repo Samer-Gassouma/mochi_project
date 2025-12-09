@@ -2,6 +2,7 @@
 .pio/
 .pioenvs/
 .piolibdeps/
+.piolibdeps_info/
 .clang_complete
 .gcc-flags.json
 .vscode/
@@ -13,6 +14,8 @@ build/
 *.bin
 *.hex
 *.map
+.pio/build/
+.pio/libdeps/
 
 # Python virtual environment (PlatformIO uses Python)
 venv/
